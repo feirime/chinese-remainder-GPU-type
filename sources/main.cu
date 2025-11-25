@@ -41,11 +41,11 @@ int main()
         mpz_setbit(b[i].get_mpz_t(), HIGH_BIT);
     }
     auto start_time = std::chrono::high_resolution_clock::now();
-    for(int i = 0; i < testSize; i++)
+    for(int i = 0; i < launchSize; i++)
     {
-        for(int j = 0; j < launchSize; j++)
+        for(int j = 0; j < testSize; j++)
         {
-            mpz_class sum = a[i] + b[i];
+            mpz_class sum = a[j] + b[j];
         }
     }
     auto end_time = std::chrono::high_resolution_clock::now();
@@ -77,9 +77,9 @@ int main()
     cudaMallocManaged(&a_dev, testSize * primeSize * sizeof(int));
     cudaMallocManaged(&b_dev, testSize * primeSize * sizeof(int));
     cudaMallocManaged(&c_dev, testSize * primeSize * sizeof(int));
+    start_time = std::chrono::high_resolution_clock::now();
     converterGMPtoCRT(a, a_dev, testSize, prime_set, primeSize);
     converterGMPtoCRT(b, b_dev, testSize, prime_set, primeSize);
-    start_time = std::chrono::high_resolution_clock::now();
     for(int i = 0; i < launchSize; i++)
     {
         add<<<1, 16>>>(a_dev, b_dev, c_dev, prime_set);
