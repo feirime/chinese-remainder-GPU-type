@@ -76,7 +76,8 @@ void chinese_decryption(char *result, const unsigned long int *rem, unsigned int
     mpz_clear(answer);
 }
 
-void converterGMPtoCRT(std::vector<mpz_class> a, unsigned long *a_dev, size_t size, unsigned long *prime_set, size_t prime_set_size)
+void converterGMPtoCRT(std::vector<mpz_class> a, unsigned long *a_dev, size_t size, 
+    unsigned long *prime_set, size_t prime_set_size)
 {
     for(size_t i = 0; i < size; i++)
     {

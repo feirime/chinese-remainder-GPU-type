@@ -1,22 +1,11 @@
 #include "crt.h"
 #include "crt_cu.h"
-#include <chrono>
-#include <iostream>
+#include "time_test.h"
 
 int const primeSize = 16;
 int const launchSize = 1000;
 int const testSize = 100000;
 
-void showTime(std::chrono::high_resolution_clock::time_point start_time, std::chrono::high_resolution_clock::time_point end_time)
-{
-    auto elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-    int hours = elapsed_time.count() / 3600000;
-    int minutes = (elapsed_time.count() % 3600000) / 60000;
-    int seconds = (elapsed_time.count() % 60000) / 1000;
-    int milliseconds = elapsed_time.count() % 1000;
-    std::cout << "Elapsed time: " << hours << " hours, " << minutes << " minutes, " 
-              << seconds << " seconds, " << milliseconds << " milliseconds" << std::endl;
-}
 
 int main()
 {
@@ -49,7 +38,7 @@ int main()
         }
     }
     auto end_time = std::chrono::high_resolution_clock::now();
-    showTime(start_time, end_time);
+    showTime(end_time - start_time);
 
     unsigned long *prime_set;
     cudaMallocManaged(&prime_set, primeSize* sizeof(unsigned long));
@@ -85,7 +74,7 @@ int main()
         add<<<1, 16>>>(a_dev, b_dev, c_dev, prime_set);
     }
     end_time = std::chrono::high_resolution_clock::now();
-    showTime(start_time, end_time);
+    showTime(end_time - start_time);
 
     cudaFree(a_dev);
     cudaFree(b_dev);
