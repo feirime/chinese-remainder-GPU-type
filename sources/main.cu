@@ -2,13 +2,13 @@
 #include "crt_cu.h"
 #include "time_test.h"
 
-int const primeSize = 16;
-int const launchSize = 1000;
-int const testSize = 100000;
-
 
 int main()
 {
+    int primeSize = 20;
+    int launchSize = 1000;
+    int testSize = 100000;
+
     // Инициализация генератора GMP
     gmp_randstate_t state;
     gmp_randinit_default(state);
@@ -38,6 +38,8 @@ int main()
         }
     }
     auto end_time = std::chrono::high_resolution_clock::now();
+    std::ofstream fileGmp("data/gmp_time.csv");
+    saveTime(fileGmp, end_time - start_time);
     showTime(end_time - start_time);
 
     unsigned long *prime_set;
@@ -71,9 +73,11 @@ int main()
     converterGMPtoCRT(b, b_dev, testSize, prime_set, primeSize);
     for(int i = 0; i < launchSize; i++)
     {
-        add<<<1, 16>>>(a_dev, b_dev, c_dev, prime_set);
+        add<<<1, 1>>>(a_dev, b_dev, c_dev, prime_set);
     }
     end_time = std::chrono::high_resolution_clock::now();
+    std::ofstream fileCuda("data/cuda_time.csv");
+    saveTime(fileCuda, end_time - start_time);
     showTime(end_time - start_time);
 
     cudaFree(a_dev);

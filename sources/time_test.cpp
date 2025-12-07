@@ -11,5 +11,8 @@ void showTime(std::chrono::duration<double, std::milli> elapsed_time)
               << seconds << " seconds, " << millisec << " milliseconds" << std::endl;
 }
 
-std::chrono::duration<double, std::milli> gmpTest()
-{}
+void saveTime(std::ofstream& file, std::chrono::duration<double, std::milli> elapsed_time)
+{
+    file << elapsed_time.count() << std::endl;
+    file.close();
+}
