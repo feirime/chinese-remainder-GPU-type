@@ -6,8 +6,16 @@
 int main()
 {
     int primeSize = 20;
-    int launchSize = 1000;
-    int testSize = 100000;
+    int dataSize_start = 10;
+    int dataSize_stop = 10000000;
+    int launchSize_start = 100000000;
+    int launchSize_stop = 100;
+    int batchSize = 12;
+    int dataSize_step = std::pow((dataSize_stop / dataSize_start), 1 / static_cast<float>(batchSize));
+    int launchSize_step = std::pow((launchSize_start/ launchSize_stop), 1 / static_cast<float>(batchSize));
+    std::cout << "Data size step: " << dataSize_step << std::endl;
+    std::cout << "Launch size step: " << launchSize_step << std::endl;
+    
 
     // Инициализация генератора GMP
     gmp_randstate_t state;
@@ -17,30 +25,18 @@ int main()
     gmp_randseed_ui(state, seed);
     std::vector<mpz_class> a; 
     std::vector<mpz_class> b;
-    a.resize(testSize);
-    b.resize(testSize);
+    a.resize(dataSize_stop);
+    b.resize(dataSize_stop);
     // Генерируем случайное число с 101 битом и устанавливаем старший бит (бит 100),
     // чтобы гарантировать порядок ~2^100 (т.е. значение в интервале [2^100, 2^101-1]).
     const unsigned int HIGH_BIT = 100;
-    for (int i = 0; i < testSize; i++)
+    for (int i = 0; i < dataSize_stop; i++)
     {
         mpz_urandomb(a[i].get_mpz_t(), state, HIGH_BIT + 1);
         mpz_setbit(a[i].get_mpz_t(), HIGH_BIT);
         mpz_urandomb(b[i].get_mpz_t(), state, HIGH_BIT + 1);
         mpz_setbit(b[i].get_mpz_t(), HIGH_BIT);
     }
-    auto start_time = std::chrono::high_resolution_clock::now();
-    for(int i = 0; i < launchSize; i++)
-    {
-        for(int j = 0; j < testSize; j++)
-        {
-            mpz_class sum = a[j] + b[j];
-        }
-    }
-    auto end_time = std::chrono::high_resolution_clock::now();
-    std::ofstream fileGmp("data/gmp_time.csv");
-    saveTime(fileGmp, end_time - start_time);
-    showTime(end_time - start_time);
 
     unsigned long *prime_set;
     cudaMallocManaged(&prime_set, primeSize* sizeof(unsigned long));
@@ -65,20 +61,37 @@ int main()
     prime_set[18] = 863;
     prime_set[19] = 859;
     unsigned long *a_dev, *b_dev, *c_dev;
-    cudaMallocManaged(&a_dev, testSize * primeSize * sizeof(int));
-    cudaMallocManaged(&b_dev, testSize * primeSize * sizeof(int));
-    cudaMallocManaged(&c_dev, testSize * primeSize * sizeof(int));
-    start_time = std::chrono::high_resolution_clock::now();
-    converterGMPtoCRT(a, a_dev, testSize, prime_set, primeSize);
-    converterGMPtoCRT(b, b_dev, testSize, prime_set, primeSize);
-    for(int i = 0; i < launchSize; i++)
+    cudaMallocManaged(&a_dev, dataSize_stop * primeSize * sizeof(int));
+    cudaMallocManaged(&b_dev, dataSize_stop * primeSize * sizeof(int));
+    cudaMallocManaged(&c_dev, dataSize_stop * primeSize * sizeof(int));
+    converterGMPtoCRT(a, a_dev, dataSize_stop, prime_set, primeSize);
+    converterGMPtoCRT(b, b_dev, dataSize_stop, prime_set, primeSize);
+    std::ofstream file("data/time.csv");
+    for(int i = 0; i < batchSize; i++)
     {
-        add<<<1, 1>>>(a_dev, b_dev, c_dev, prime_set);
+        auto startTime = std::chrono::high_resolution_clock::now();
+        for(int i = 0; i < launchSize_start; i++)
+        {
+            for(int j = 0; j < dataSize_start; j++)
+            {
+                mpz_class sum = a[j] + b[j];
+            }
+        }
+        auto endTime = std::chrono::high_resolution_clock::now();
+        auto gmpTime = endTime - startTime;
+        showTime(gmpTime);
+        startTime = std::chrono::high_resolution_clock::now();
+        for(int i = 0; i < launchSize_start; i++)
+        {
+            add<<<1, 1>>>(a_dev, b_dev, c_dev, dataSize_start, prime_set, primeSize);
+        }
+        endTime = std::chrono::high_resolution_clock::now();
+        auto cudaTime = endTime - startTime;
+        saveTime(file, gmpTime, cudaTime, dataSize_start, launchSize_start);
+        showTime(cudaTime);
+        dataSize_start *= dataSize_step;
+        launchSize_start /= launchSize_step;
     }
-    end_time = std::chrono::high_resolution_clock::now();
-    std::ofstream fileCuda("data/cuda_time.csv");
-    saveTime(fileCuda, end_time - start_time);
-    showTime(end_time - start_time);
 
     cudaFree(a_dev);
     cudaFree(b_dev);

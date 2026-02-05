@@ -11,8 +11,9 @@ void showTime(std::chrono::duration<double, std::milli> elapsed_time)
               << seconds << " seconds, " << millisec << " milliseconds" << std::endl;
 }
 
-void saveTime(std::ofstream& file, std::chrono::duration<double, std::milli> elapsed_time)
+void saveTime(std::ofstream& file, std::chrono::duration<double, std::milli> gmpTime, 
+    std::chrono::duration<double, std::milli> cudaTime, long int dataSize, long int launchSize)
 {
-    file << elapsed_time.count() << std::endl;
-    file.close();
+    file << gmpTime.count() << " " << cudaTime.count() << " " 
+         << dataSize << " " << launchSize << "\n";
 }
