@@ -10,7 +10,7 @@ int main()
     int dataSize_stop = 10000000;
     int launchSize_start = 100000000;
     int launchSize_stop = 100;
-    int batchSize = 12;
+    int batchSize = 18;
     int dataSize_step = std::pow((dataSize_stop / dataSize_start), 1 / static_cast<float>(batchSize));
     int launchSize_step = std::pow((launchSize_start/ launchSize_stop), 1 / static_cast<float>(batchSize));
     std::cout << "Data size step: " << dataSize_step << std::endl;
